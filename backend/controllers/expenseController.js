@@ -1,10 +1,10 @@
 import { v4 as uuidv4 } from 'uuid';
-import { connectToDb } from '../db.js';
+import connection from '../db.js';
+
 export async function getAllExpenses(req, res) {
-    let connection;
+
     try {
       // Establish a connection to the database
-      connection = await connectToDb();
   
       // Retrieve the user id from the route parameters
       const { userid } = req.params;
@@ -42,22 +42,16 @@ export async function getAllExpenses(req, res) {
       console.error("Error fetching expenses:", err);
       res.status(500).json({ error: err.message });
     } finally {
-      if (connection) {
-        try {
-          await connection.end();
-        } catch (err) {
-          console.error("Error closing connection:", err);
-        }
-      }
+      
     }
   }
   
   
 
   export async function getExpenseById(req, res) {
-    let connection;
+
     try {
-      connection = await connectToDb();
+      
       const { id } = req.params;
   
       // Join Expenses with Expense_Types to get category (type_name)
@@ -98,13 +92,7 @@ export async function getAllExpenses(req, res) {
       console.error("Error fetching expense:", err);
       res.status(500).json({ error: err.message });
     } finally {
-      if (connection) {
-        try {
-          await connection.end();
-        } catch (err) {
-          console.error("Error closing connection:", err);
-        }
-      }
+      
     }
   }
   
@@ -112,9 +100,9 @@ export async function getAllExpenses(req, res) {
 
 
 export async function addExpense(req, res) {
-  let connection;
+
   try {
-    connection = await connectToDb();
+
 
     const { user_id, type_id, amount, expense_date, notes, description } = req.body;
     const expense_id = uuidv4();
@@ -167,21 +155,15 @@ export async function addExpense(req, res) {
     console.error("Error adding expense:", err);
     res.status(500).json({ error: err.message });
   } finally {
-    if (connection) {
-      try {
-        await connection.end();
-      } catch (err) {
-        console.error("Error closing connection:", err);
-      }
-    }
+    
   }
 }
 
 
 export async function updateExpense(req, res) {
-    let connection;
+
     try {
-      connection = await connectToDb();
+
   
       const { id } = req.params;
       const { type_id,description, amount, expense_date, notes } = req.body;
@@ -237,22 +219,15 @@ export async function updateExpense(req, res) {
       console.error("Error updating expense:", err);
       res.status(500).json({ error: err.message });
     } finally {
-      if (connection) {
-        try {
-          await connection.end();
-        } catch (err) {
-          console.error("Error closing connection:", err);
-        }
-      }
+      
     }
   }
 
 
   export async function deleteExpenseById(req, res) {
-    let connection;
+
     try {
       // Establish a connection to the database
-      connection = await connectToDb();
   
       // Retrieve the expense id from the route parameters
       const { id } = req.params;
@@ -277,22 +252,15 @@ export async function updateExpense(req, res) {
       console.error("Error deleting expense:", err);
       res.status(500).json({ error: err.message });
     } finally {
-      if (connection) {
-        try {
-          await connection.end();
-        } catch (err) {
-          console.error("Error closing connection:", err);
-        }
-      }
+      
     }
   }
 
 
   export async function getRecentExpenses(req, res) {
-    let connection;
     try {
       // Establish a connection to the database
-      connection = await connectToDb();
+ 
   
       // Retrieve the user id from the route parameters
       const { userid } = req.params;
@@ -331,21 +299,15 @@ export async function updateExpense(req, res) {
       console.error("Error fetching recent expenses:", err);
       res.status(500).json({ error: err.message });
     } finally {
-      if (connection) {
-        try {
-          await connection.end();
-        } catch (err) {
-          console.error("Error closing connection:", err);
-        }
-      }
+      
     }
 }
 
 export async function getMonthlyExpenses(req, res) {
-  let connection;
+
   try {
     // Establish a connection to the database
-    connection = await connectToDb();
+
     
     // Retrieve the user id from the route parameters
     const { userid } = req.params;
@@ -374,21 +336,15 @@ export async function getMonthlyExpenses(req, res) {
     console.error("Error fetching monthly expenses:", err);
     res.status(500).json({ error: err.message });
   } finally {
-    if (connection) {
-      try {
-        await connection.end();
-      } catch (err) {
-        console.error("Error closing connection:", err);
-      }
-    }
+    
   }
 }
 
 export async function getExpenseCategories(req, res) {
-  let connection;
+
   try {
     // Establish a connection to the database
-    connection = await connectToDb();
+ 
     
     // Retrieve the user id from the route parameters
     const { userid } = req.params;
@@ -417,21 +373,15 @@ export async function getExpenseCategories(req, res) {
     console.error("Error fetching expense categories:", err);
     res.status(500).json({ error: err.message });
   } finally {
-    if (connection) {
-      try {
-        await connection.end();
-      } catch (err) {
-        console.error("Error closing connection:", err);
-      }
-    }
+    
   }
 }
 
 
 export async function getTotalExpenses(req, res) {
-  let connection;
+
   try {
-    connection = await connectToDb();
+
     const { userid } = req.params;
 
     const sql = `
@@ -462,7 +412,7 @@ export async function getTotalExpenses(req, res) {
     console.error("Error fetching total expenses:", err);
     res.status(500).json({ error: err.message });
   } finally {
-    if (connection) await connection.end().catch(console.error);
+    
   }
 }
 

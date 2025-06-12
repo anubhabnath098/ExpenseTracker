@@ -1,14 +1,14 @@
-import { connectToDb } from '../db.js';
+import connection from '../db.js';
 import bcrypt from 'bcrypt';
 import { sendOtpEmail } from '../utils/sendEmail.js';
 
 // Get user details
 export const getUserDetails = async (req, res) => {
   const { user_id } = req.user;
-  let connection;
+
 
   try {
-    connection = await connectToDb();
+
     const [rows] = await connection.execute(
       "SELECT user_id, name, email, phone_number FROM Users WHERE user_id = ?",
       [user_id]
@@ -20,7 +20,7 @@ export const getUserDetails = async (req, res) => {
     console.error(err);
     res.status(500).json({ message: "Failed to fetch user data" });
   } finally {
-    if (connection) await connection.end();
+
   }
 };
 
@@ -28,7 +28,7 @@ export const getUserDetails = async (req, res) => {
 export const updateUserProfile = async (req, res) => {
   const { user_id } = req.user;
   const { name, email, phone_number, password } = req.body;
-  let connection;
+
 
   try {
     const updateFields = [];
@@ -59,7 +59,7 @@ export const updateUserProfile = async (req, res) => {
     values.push(user_id);
 
     const sql = `UPDATE Users SET ${updateFields.join(", ")} WHERE user_id = ?`;
-    connection = await connectToDb();
+
     await connection.execute(sql, values);
 
     res.status(200).json({ message: "Profile updated successfully" });
@@ -67,7 +67,7 @@ export const updateUserProfile = async (req, res) => {
     console.error(err);
     res.status(500).json({ message: "Failed to update profile" });
   } finally {
-    if (connection) await connection.end();
+    
   }
 };
 
@@ -77,10 +77,10 @@ export const sendEmailUpdateOtp = async (req, res) => {
   if (!newEmail) return res.status(400).json({ message: "Email required" });
 
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
-  let connection;
+
 
   try {
-    connection = await connectToDb();
+
     await connection.execute(
       "REPLACE INTO EmailOtps (email, otp) VALUES (?, ?)",
       [newEmail, otp]
@@ -91,7 +91,7 @@ export const sendEmailUpdateOtp = async (req, res) => {
     console.error(err);
     res.status(500).json({ message: "Failed to send OTP" });
   } finally {
-    if (connection) await connection.end();
+    
   }
 };
 
@@ -100,9 +100,9 @@ export const verifyEmailUpdateOtp = async (req, res) => {
   const { newEmail, otp } = req.body;
   if (!newEmail || !otp) return res.status(400).json({ message: "Email and OTP required" });
 
-  let connection;
+ 
   try {
-    connection = await connectToDb();
+    
     const [rows] = await connection.execute(
       "SELECT * FROM EmailOtps WHERE email = ? AND otp = ?",
       [newEmail, otp]
@@ -119,6 +119,6 @@ export const verifyEmailUpdateOtp = async (req, res) => {
     console.error(err);
     res.status(500).json({ message: "OTP verification failed" });
   } finally {
-    if (connection) await connection.end();
+    
   }
 };

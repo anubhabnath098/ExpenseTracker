@@ -1,11 +1,8 @@
 import { v4 as uuidv4 } from 'uuid';
-import { connectToDb } from '../db.js';
-
+import connection from '../db.js';
 // Get all budgets for a user
 export async function getAllBudget(req, res) {
-  let connection;
   try {
-    connection = await connectToDb();
     const { userid } = req.params;
 
     const sql = `
@@ -42,21 +39,13 @@ export async function getAllBudget(req, res) {
     console.error("Error fetching budgets:", err);
     res.status(500).json({ error: err.message });
   } finally {
-    if (connection) {
-      try {
-        await connection.end();
-      } catch (err) {
-        console.error("Error closing connection:", err);
-      }
-    }
+    
   }
 }
 
 // Get a budget by ID
 export async function getBudgetById(req, res) {
-  let connection;
   try {
-    connection = await connectToDb();
     const { id } = req.params;
 
     const sql = `
@@ -98,21 +87,14 @@ export async function getBudgetById(req, res) {
     console.error("Error fetching budget:", err);
     res.status(500).json({ error: err.message });
   } finally {
-    if (connection) {
-      try {
-        await connection.end();
-      } catch (err) {
-        console.error("Error closing connection:", err);
-      }
-    }
+   
   }
 }
 
 // Add a new budget
 export async function addBudget(req, res) {
-  let connection;
+
   try {
-    connection = await connectToDb();
     const { user_id, type_id, budget_limit, budget_name, budget_spent, start_date, end_date, notes } = req.body;
     const budget_id = uuidv4();
 
@@ -174,21 +156,14 @@ export async function addBudget(req, res) {
     console.error("Error adding budget:", err);
     res.status(500).json({ error: err.message });
   } finally {
-    if (connection) {
-      try {
-        await connection.end();
-      } catch (err) {
-        console.error("Error closing connection:", err);
-      }
-    }
+    
   }
 }
 
 
 export async function getUnreadNotifications(req, res) {
-  let connection;
   try {
-    connection = await connectToDb();
+    
     const { user_id } = req.params;
 
     // Validate user_id
@@ -234,21 +209,15 @@ export async function getUnreadNotifications(req, res) {
     console.error("Error fetching unread notifications:", err);
     res.status(500).json({ error: err.message });
   } finally {
-    if (connection) {
-      try {
-        await connection.end();
-      } catch (err) {
-        console.error("Error closing connection:", err);
-      }
-    }
+    
   }
 }
 
 // Update an existing budget
 export async function updateBudget(req, res) {
-  let connection;
+
   try {
-    connection = await connectToDb();
+
     const { id } = req.params;
     const { user_id, type_id, budget_name, budget_limit, budget_spent, start_date, end_date, notes } = req.body;
 
@@ -325,20 +294,13 @@ export async function updateBudget(req, res) {
     console.error("Error updating budget:", err);
     res.status(500).json({ error: err.message });
   } finally {
-    if (connection) {
-      try {
-        await connection.end();
-      } catch (err) {
-        console.error("Error closing connection:", err);
-      }
-    }
+    
   }
 }
 
 export async function markNotificationAsRead(req, res) {
-  let connection;
+
   try {
-    connection = await connectToDb();
     const { notification_id, user_id } = req.body; // Assuming notification_id and user_id are sent in the request body
 
     // Validate inputs
@@ -364,21 +326,15 @@ export async function markNotificationAsRead(req, res) {
     console.error("Error marking notification as read:", err);
     res.status(500).json({ error: err.message });
   } finally {
-    if (connection) {
-      try {
-        await connection.end();
-      } catch (err) {
-        console.error("Error closing connection:", err);
-      }
-    }
+    
   }
 }
 
 
 export async function getRecentNotifications(req, res) {
-  let connection;
+
   try {
-    connection = await connectToDb();
+
     const { user_id } = req.params; // Assuming user_id is passed as a query parameter
 
     // Validate user_id
@@ -425,21 +381,15 @@ export async function getRecentNotifications(req, res) {
     console.error("Error fetching recent notifications:", err);
     res.status(500).json({ error: err.message });
   } finally {
-    if (connection) {
-      try {
-        await connection.end();
-      } catch (err) {
-        console.error("Error closing connection:", err);
-      }
-    }
+    
   }
 }
 
   export async function deleteBudgetById(req, res) {
-    let connection;
+
     try {
       // Establish a connection to the database
-      connection = await connectToDb();
+
   
       // Retrieve the budget id from the route parameters
       const { id } = req.params;
@@ -464,20 +414,14 @@ export async function getRecentNotifications(req, res) {
       console.error("Error deleting budget:", err);
       res.status(500).json({ error: err.message });
     } finally {
-      if (connection) {
-        try {
-          await connection.end();
-        } catch (err) {
-          console.error("Error closing connection:", err);
-        }
-      }
+     
     }
   }
 
   export async function getBudgetSummaryByCategory(req, res) {
-    let connection;
+
     try {
-      connection = await connectToDb();
+
       const { userid } = req.params;
   
       const sql = `
@@ -505,20 +449,13 @@ export async function getRecentNotifications(req, res) {
       console.error("Error fetching budget summary:", err);
       res.status(500).json({ error: err.message });
     } finally {
-      if (connection) {
-        try {
-          await connection.end();
-        } catch (err) {
-          console.error("Error closing connection:", err);
-        }
-      }
+     
     }
   }
 
   export async function getTotalBudget(req, res) {
-    let connection;
+
     try {
-      connection = await connectToDb();
       const { userid } = req.params;
   
       const sql = `
@@ -549,14 +486,14 @@ export async function getRecentNotifications(req, res) {
       console.error("Error fetching total budget:", err);
       res.status(500).json({ error: err.message });
     } finally {
-      if (connection) await connection.end().catch(console.error);
+      
     }
   }
 
   export async function getRemainingBudget(req, res) {
-    let connection;
+
     try {
-      connection = await connectToDb();
+      
       const { userid } = req.params;
   
       const sql = `
@@ -591,7 +528,7 @@ export async function getRecentNotifications(req, res) {
       console.error("Error fetching remaining budget:", err);
       res.status(500).json({ error: err.message });
     } finally {
-      if (connection) await connection.end().catch(console.error);
+      
     }
   }
   
