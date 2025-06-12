@@ -52,11 +52,11 @@ CREATE TABLE Budgets (
     CONSTRAINT fk_notifications_budget FOREIGN KEY (budget_id) REFERENCES Budgets(budget_id) ON DELETE CASCADE
 );
 
-CREATE TABLE EMAILOTPS(
+CREATE TABLE EmailOtps(
     email VARCHAR(255) PRIMARY KEY,
     otp VARCHAR(10) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)
+);
 
 -- Insert initial data in Expense type table
 
