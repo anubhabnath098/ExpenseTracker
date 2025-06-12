@@ -132,7 +132,12 @@ export default function SettingsPage() {
     password.length > 0;
 
   return (
-    <div className="relative py-8 px-4 sm:px-6 lg:px-8">
+    <div className="relative py-8 px-4 sm:px-6 lg:px-8 grid-pattern">
+      {/* Background elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-purple-900/10 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2"></div>
+        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-blue-900/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/2"></div>
+      </div>
       {/* Floating message */}
       {msg && (
         <div

@@ -189,14 +189,19 @@ export default function BudgetsPage() {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in grid-pattern">
+      {/* Background elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-purple-900/10 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2"></div>
+        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-blue-900/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/2"></div>
+      </div>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold gradient-text">Budgets</h1>
           <p className="text-muted-foreground mt-1">Manage and track your budget plans</p>
         </div>
 
-        <Button onClick={() => setIsAddDialogOpen(true)} className="gradient-bg">
+        <Button onClick={() => setIsAddDialogOpen(true)} className="gradient-bg text-white">
           <Plus className="h-4 w-4 mr-2" />
           Add Budget
         </Button>

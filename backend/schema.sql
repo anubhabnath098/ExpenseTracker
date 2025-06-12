@@ -52,5 +52,36 @@ CREATE TABLE Budgets (
     CONSTRAINT fk_notifications_budget FOREIGN KEY (budget_id) REFERENCES Budgets(budget_id) ON DELETE CASCADE
 );
 
+CREATE TABLE EMAILOTPS(
+    email VARCHAR(255) PRIMARY KEY,
+    otp VARCHAR(10) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)
+
+-- Insert initial data in Expense type table
+
+INSERT INTO Expense_Types (type_id, type_name, description)
+VALUES ('et_1', 'Food & Dining', 'Expenses related to dining out and groceries');
+
+INSERT INTO Expense_Types (type_id, type_name, description)
+VALUES ('et_2', 'Transportation', 'Expenses related to travel, commuting, and vehicle costs');
+
+
+INSERT INTO Expense_Types (type_id, type_name, description)
+VALUES ('et_3', 'Entertainment', 'Expenses related to movies, concerts, and leisure activities');
+
+
+INSERT INTO Expense_Types (type_id, type_name, description)
+VALUES ('et_4', 'Shopping', 'Expenses related to clothing, electronics, and other consumer goods');
+
+
+INSERT INTO Expense_Types (type_id, type_name, description)
+VALUES ('et_5', 'Utilities', 'Expenses related to electricity, water, gas, and other household bills');
+
+
+INSERT INTO Expense_Types (type_id, type_name, description)
+VALUES ('et_6', 'Other', 'Other Expenses');
+
+
 
 
