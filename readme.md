@@ -128,6 +128,10 @@ The server will run at `http://localhost:5000`.
 
 ---
 
+## Relational Schema Diagram   
+
+![Schema_Diagram](frontend/public/schema_diag_expense_tracker.png)
+
 ## Frontend Setup 🌟
 
 ### 1️⃣ Prerequisites
