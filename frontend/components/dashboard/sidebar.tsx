@@ -85,7 +85,7 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
         <div className={cn("flex h-full flex-col", !isOpen && "md:items-center", !isOpen && isMobile && "hidden")}>
           <div className={cn("flex items-center mb-8 px-4 h-16", !isOpen && "md:justify-center md:px-0")}>
             <DollarSign className="h-8 w-8 text-purple-500" />
-            {isOpen && <h1 className="text-xl font-bold ml-2 gradient-text">ExpenseTracker</h1>}
+            {isOpen && <h1 className="text-xl font-bold ml-2 text-purple-400">ExpenseTracker</h1>}
           </div>
 
           <div className="space-y-1 flex-1 px-4">
