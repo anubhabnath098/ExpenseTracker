@@ -171,7 +171,7 @@ export const AuthForm = () => {
     <>
       <div className="p-6">
         <div className="text-center mb-6">
-          <h2 className="text-2xl font-bold mb-2 gradient-text">{isLogin ? "Welcome Back" : "Get Started Today"}</h2>
+          <h2 className="text-2xl font-bold mb-2 text-purple-400">{isLogin ? "Welcome Back" : "Get Started Today"}</h2>
           <p className="text-muted-foreground text-sm">
             {isLogin ? "Sign in to your account to continue" : "Create your account to start tracking expenses"}
           </p>
@@ -319,7 +319,7 @@ export const AuthForm = () => {
       <Dialog open={showOtpDialog} onOpenChange={setShowOtpDialog}>
         <DialogContent className="glass-effect border-white/10">
           <DialogHeader>
-            <DialogTitle className="gradient-text">Verify Email</DialogTitle>
+            <DialogTitle className="text-purple-400">Verify Email</DialogTitle>
             <DialogDescription className="text-muted-foreground">
               Enter the 6‑digit OTP we sent to {regValues.email}
             </DialogDescription>

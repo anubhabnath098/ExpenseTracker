@@ -94,7 +94,7 @@ export default function Home() {
               <DollarSign className="h-6 w-6 text-purple-400" />
               <div className="absolute inset-0 bg-purple-400/20 rounded-full blur-md animate-pulse-glow"></div>
             </div>
-            <h1 className="text-xl font-bold gradient-text">ExpenseTracker</h1>
+            <h1 className="text-xl font-bold text-purple-400">ExpenseTracker</h1>
           </div>
           <div className="hidden md:flex items-center gap-8">
             <nav className="flex items-center gap-6">
@@ -121,7 +121,7 @@ export default function Home() {
           <div className="flex flex-col lg:flex-row items-center gap-12">
             <div className="lg:w-1/2 space-y-8 opacity-0 animate-slide-up">
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight">
-                <span className="gradient-text">Take Control</span> of Your Financial Future
+                <span className="text-purple-400">Take Control</span> of Your Financial Future
               </h1>
               <p className="text-xl text-muted-foreground max-w-lg">
                 Track expenses, set budgets, and gain insights into your spending habits with our powerful expense
@@ -166,7 +166,7 @@ export default function Home() {
       <section id="features" className="py-20 relative">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-3xl mx-auto mb-16 opacity-0 animate-slide-up">
-            <h2 className="text-3xl font-bold mb-4 gradient-text">Powerful Features</h2>
+            <h2 className="text-3xl font-bold mb-4 text-purple-400">Powerful Features</h2>
             <p className="text-muted-foreground text-lg">
               ExpenseTracker comes packed with all the tools you need to manage your finances effectively.
             </p>
@@ -192,7 +192,7 @@ export default function Home() {
       <section id="screenshots" className="py-20 relative">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-3xl mx-auto mb-16 opacity-0 animate-slide-up">
-            <h2 className="text-3xl font-bold mb-4 gradient-text">See It In Action</h2>
+            <h2 className="text-3xl font-bold mb-4 text-purple-400">See It In Action</h2>
             <p className="text-muted-foreground text-lg">
               Explore the intuitive interface and powerful features that make ExpenseTracker the best choice for
               managing your finances.
@@ -222,7 +222,7 @@ export default function Home() {
       <section id="testimonials" className="py-20 relative">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-3xl mx-auto mb-16 opacity-0 animate-slide-up">
-            <h2 className="text-3xl font-bold mb-4 gradient-text">What Our Users Say</h2>
+            <h2 className="text-3xl font-bold mb-4 text-purple-400">What Our Users Say</h2>
             <p className="text-muted-foreground text-lg">
               Join thousands of satisfied users who have transformed their financial management with ExpenseTracker.
             </p>

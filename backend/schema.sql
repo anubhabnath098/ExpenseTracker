@@ -21,6 +21,7 @@ CREATE TABLE Expenses (
     type_id VARCHAR(100) NOT NULL,
     amount DECIMAL(10,2) NOT NULL,
     expense_date DATE NOT NULL,
+    budget_id VARCHAR(100),
     notes TEXT,
     CONSTRAINT fk_expenses_user FOREIGN KEY (user_id) REFERENCES Users (user_id) ON DELETE CASCADE,
     CONSTRAINT fk_expenses_type FOREIGN KEY (type_id) REFERENCES Expense_Types (type_id) ON DELETE CASCADE
@@ -51,6 +52,8 @@ CREATE TABLE Budgets (
     CONSTRAINT fk_notifications_user FOREIGN KEY (user_id) REFERENCES Users (user_id) ON DELETE CASCADE,
     CONSTRAINT fk_notifications_budget FOREIGN KEY (budget_id) REFERENCES Budgets(budget_id) ON DELETE CASCADE
 );
+
+ALTER TABLE EXPENSES ADD CONSTRAINT fk_budget_id FOREIGN KEY (budget_id) REFERENCES Budgets(budget_id) ON DELETE CASCADE ON UPDATE CASCADE;
 
 CREATE TABLE EmailOtps(
     email VARCHAR(255) PRIMARY KEY,

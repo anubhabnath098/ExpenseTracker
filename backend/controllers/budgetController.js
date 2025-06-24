@@ -100,9 +100,10 @@ export async function addBudget(req, res) {
 
     const insertSQL = `
       INSERT INTO Budgets (budget_id, user_id, type_id, budget_name, budget_limit, budget_spent, start_date, end_date, notes)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?,?, ?, ?, ?)
     `;
-    await connection.execute(insertSQL, [budget_id, user_id, type_id, budget_name, budget_limit, budget_spent, start_date, end_date, notes]);
+    await connection.execute(insertSQL, [budget_id, user_id, type_id, budget_name, budget_limit, 0, start_date, end_date, notes]);
+
 
     // Check if notification is needed
     const notificationThreshold = budget_limit * 0.9; // 90% of budget_limit
@@ -219,11 +220,11 @@ export async function updateBudget(req, res) {
   try {
 
     const { id } = req.params;
-    const { user_id, type_id, budget_name, budget_limit, budget_spent, start_date, end_date, notes } = req.body;
+    const { user_id, type_id, budget_name, budget_limit, start_date, end_date, notes } = req.body;
 
     const updateSQL = `
       UPDATE Budgets
-      SET user_id = ?, type_id = ?, budget_name = ?, budget_limit = ?, budget_spent = ?, start_date = ?, end_date = ?, notes = ?
+      SET user_id = ?, type_id = ?, budget_name = ?, budget_limit = ?, start_date = ?, end_date = ?, notes = ?
       WHERE budget_id = ?
     `;
     const [result] = await connection.execute(updateSQL, [
@@ -231,7 +232,6 @@ export async function updateBudget(req, res) {
       type_id,
       budget_name,
       budget_limit,
-      budget_spent,
       start_date,
       end_date,
       notes,
@@ -242,21 +242,7 @@ export async function updateBudget(req, res) {
       return res.status(404).json({ message: "Budget not found" });
     }
 
-    // Check if notification is needed
-    const notificationThreshold = budget_limit * 0.9; // 90% of budget_limit
-    if (budget_spent >= notificationThreshold) {
-      const notification_id = uuidv4();
-      const notification_type = budget_spent >= budget_limit ? 'warning' : 'info';
-      const message = budget_spent >= budget_limit 
-        ? `Budget "${budget_name}" has exceeded the limit of ${budget_limit}.`
-        : `Budget "${budget_name}" has reached 90% of the limit (${budget_limit}).`;
-
-      const notificationSQL = `
-        INSERT INTO Notifications (notification_id, user_id, budget_id, message, notification_type, is_read, notified_at)
-        VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-      `;
-      await connection.execute(notificationSQL, [notification_id, user_id, id, message, notification_type, false]);
-    }
+    
 
     // Fetch the updated budget with category name
     const fetchSQL = `

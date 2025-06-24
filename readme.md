@@ -98,6 +98,7 @@ The server will run at `http://localhost:5000`.
 | GET    | /api/expenses/categories/\:userid | authMiddleware | Get expense categories         |
 | GET    | /api/expenses/total/\:userid      | authMiddleware | Get total expenses for a user  |
 | GET    | /api/expenses/\:id                | authMiddleware | Get expense by ID              |
+| GET    | /api/expenses/budget/\:id         | authMiddleware | Get all budget names with id   |
 
 ### Budget Routes 📈
 

@@ -16,6 +16,7 @@ export async function getAllExpenses(req, res) {
           e.amount,
           e.description,
           e.notes,
+          e.budget_id,
           et.type_name
         FROM Expenses e
         JOIN Expense_Types et ON e.type_id = et.type_id
@@ -33,7 +34,7 @@ export async function getAllExpenses(req, res) {
         description: row.description || "",     
         amount: Number(row.amount),       
         notes: row.notes || "",          
-        budgetId: null                    
+        budget_id: row.budget_id || null                    
       }));
   
 
@@ -45,7 +46,31 @@ export async function getAllExpenses(req, res) {
       
     }
   }
-  
+
+  export async function getAllBudgetNames(req, res) {
+    try{
+      const { userid } = req.params;
+
+      const sql = `
+        SELECT budget_id, budget_name, start_date, end_date
+        FROM Budgets
+        WHERE user_id = ?
+      `;
+
+      const [rows] = await connection.execute(sql, [userid]);
+
+      // Transform the rows into the desired response format
+      const budgets = rows.map(row => ({
+        budget_id: row.budget_id,
+        budget_name: row.budget_name,
+      }));
+
+      return res.json(budgets);
+    }catch (err) {
+      console.error("Error fetching budget names:", err);
+      res.status(500).json({ error: err.message });
+    }
+  }
   
 
   export async function getExpenseById(req, res) {
@@ -62,6 +87,7 @@ export async function getAllExpenses(req, res) {
           e.amount,
           e.description,
           e.notes,
+          e.budget_id,
           et.type_name
         FROM Expenses e
         JOIN Expense_Types et ON e.type_id = et.type_id
@@ -83,7 +109,7 @@ export async function getAllExpenses(req, res) {
         description: row.description || "",     
         amount: Number(row.amount),       
         notes: row.notes || "",          
-        budgetId: null      // No budget_id in Expenses table; adjust if needed
+        budgetId: row.budget_id || null
       };
 
   
@@ -102,15 +128,12 @@ export async function getAllExpenses(req, res) {
 export async function addExpense(req, res) {
 
   try {
-
-
-    const { user_id, type_id, amount, expense_date, notes, description } = req.body;
+    const { user_id, type_id, amount, expense_date, notes, description, budget_id } = req.body;
     const expense_id = uuidv4();
-
     // Insert the expense
     const insertSQL = `
-      INSERT INTO Expenses (expense_id, user_id, description, type_id, amount, expense_date, notes)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO Expenses (expense_id, user_id, description, type_id, amount, expense_date, notes, budget_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `;
     await connection.execute(insertSQL, [
       expense_id,
@@ -120,7 +143,43 @@ export async function addExpense(req, res) {
       amount,
       expense_date,
       notes,
+      budget_id,
     ]);
+    if(budget_id){
+      const budgetUpdateSQL = `SELECT SUM(amount) as total_spent FROM Expenses WHERE budget_id = ?`;
+      const [budgetRows] = await connection.execute(budgetUpdateSQL, [budget_id]);
+      const totalSpent = budgetRows[0]?.total_spent || 0;
+
+      // Update the budget's spent amount
+      const updateBudgetSQL = `
+        UPDATE Budgets
+        SET budget_spent = ?
+        WHERE budget_id = ?
+      `;
+      await connection.execute(updateBudgetSQL, [totalSpent, budget_id]);
+
+      const budgetSQL = `SELECT budget_name, budget_limit, budget_spent FROM Budgets WHERE budget_id = ?`;
+      const [SelectbudgetRows] = await connection.execute(budgetSQL, [budget_id]);
+      const budget_name = SelectbudgetRows[0]?.budget_name || "";
+      const budget_limit = parseFloat(SelectbudgetRows[0]?.budget_limit) || 0;
+      const budget_spent = parseFloat(SelectbudgetRows[0]?.budget_spent) || 0;
+
+      // Check if notification is needed
+      const notificationThreshold = budget_limit * 0.9; // 90% of budget_limit
+      if (budget_spent >= notificationThreshold) {
+        const notification_id = uuidv4();
+        const notification_type = budget_spent >= budget_limit ? 'warning' : 'info';
+        const message = budget_spent >= budget_limit 
+          ? `Budget "${budget_name}" has exceeded the limit of ${budget_limit}.`
+          : `Budget "${budget_name}" has reached 90% of the limit (${budget_limit}).`;
+
+        const notificationSQL = `
+          INSERT INTO Notifications (notification_id, user_id, budget_id, message, notification_type, is_read, notified_at)
+          VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+        `;
+        await connection.execute(notificationSQL, [notification_id, user_id, budget_id, message, notification_type, false]);
+      }
+    }
 
     // Fetch inserted expense with category name
     const fetchSQL = `
@@ -130,6 +189,7 @@ export async function addExpense(req, res) {
         e.description,
         e.amount,
         e.notes,
+        e.budget_id,
         et.type_name
       FROM Expenses e
       JOIN Expense_Types et ON e.type_id = et.type_id
@@ -147,13 +207,13 @@ export async function addExpense(req, res) {
       description: row.notes || "",
       amount: Number(row.amount),
       notes: row.notes || "",
-      budgetId: null,
+      budget_id: row.budget_id || null
     };
 
-    res.status(201).json({ message: "Expense added successfully", expense });
+    return res.status(201).json({ message: "Expense added successfully", expense });
   } catch (err) {
     console.error("Error adding expense:", err);
-    res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: err.message });
   } finally {
     
   }
@@ -166,12 +226,21 @@ export async function updateExpense(req, res) {
 
   
       const { id } = req.params;
-      const { type_id,description, amount, expense_date, notes } = req.body;
-  
+      const { type_id,description, amount, expense_date, notes, budget_id } = req.body;
+      
+      // Check if the expense exists
+      const checkSQL = `SELECT * FROM Expenses WHERE expense_id = ?`;
+      const [checkRows] = await connection.execute(checkSQL, [id]);
+      if (checkRows.length === 0) {
+        return res.status(404).json({ message: "Expense not found" });
+      }
+
+      const previousBudgetId = checkRows[0].budget_id;
+      const user_id = checkRows[0].user_id;
       // Update the expense
       const updateSQL = `
         UPDATE Expenses
-        SET type_id = ?, amount = ?, expense_date = ?, notes = ?, description = ?
+        SET type_id = ?, amount = ?, expense_date = ?, notes = ?, description = ?, budget_id = ?
         WHERE expense_id = ?
       `;
       const [result] = await connection.execute(updateSQL, [
@@ -180,8 +249,56 @@ export async function updateExpense(req, res) {
         expense_date,
         notes,
         description,
+        budget_id,
         id,
       ]);
+
+      if(budget_id){
+        const budgetUpdateSQL = `SELECT SUM(amount) as total_spent FROM Expenses WHERE budget_id = ?`;
+        const [budgetRows] = await connection.execute(budgetUpdateSQL, [budget_id]);
+        const totalSpent = budgetRows[0]?.total_spent || 0;
+        // Update the budget's spent amount
+        const updateBudgetSQL = `
+          UPDATE Budgets
+          SET budget_spent = ?
+          WHERE budget_id = ?
+        `;
+        await connection.execute(updateBudgetSQL, [totalSpent, budget_id]);
+
+        const budgetSQL = `SELECT budget_name, budget_limit, budget_spent FROM Budgets WHERE budget_id = ?`;
+        const [SelectbudgetRows] = await connection.execute(budgetSQL, [budget_id]);
+        const budget_name = SelectbudgetRows[0]?.budget_name || "";
+        const budget_limit = parseFloat(SelectbudgetRows[0]?.budget_limit) || 0;
+        const budget_spent = parseFloat(SelectbudgetRows[0]?.budget_spent) || 0;
+
+        // Check if notification is needed
+        const notificationThreshold = budget_limit * 0.9; // 90% of budget_limit
+        if (budget_spent >= notificationThreshold) {
+          const notification_id = uuidv4();
+          const notification_type = budget_spent >= budget_limit ? 'warning' : 'info';
+          const message = budget_spent >= budget_limit 
+            ? `Budget "${budget_name}" has exceeded the limit of ${budget_limit}.`
+            : `Budget "${budget_name}" has reached 90% of the limit (${budget_limit}).`;
+          const notificationSQL = `
+            INSERT INTO Notifications (notification_id, user_id, budget_id, message, notification_type, is_read, notified_at)
+            VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+          `;
+          await connection.execute(notificationSQL, [notification_id, user_id, budget_id, message, notification_type, false]);
+        }
+      }
+      if(previousBudgetId && previousBudgetId !== budget_id) {
+        const previousBudgetUpdateSQL = `SELECT SUM(amount) as total_spent FROM Expenses WHERE budget_id = ?`;
+        const [previousBudgetRows] = await connection.execute(previousBudgetUpdateSQL, [previousBudgetId]);
+        const previousTotalSpent = previousBudgetRows[0]?.total_spent || 0;
+
+        // Update the previous budget's spent amount
+        const updatePreviousBudgetSQL = `
+          UPDATE Budgets
+          SET budget_spent = ?
+          WHERE budget_id = ?
+        `;
+        await connection.execute(updatePreviousBudgetSQL, [previousTotalSpent, previousBudgetId]);
+      }
   
       if (result.affectedRows === 0) {
         return res.status(404).json({ message: "Expense not found" });
@@ -195,6 +312,7 @@ export async function updateExpense(req, res) {
           e.description,
           e.amount,
           e.notes,
+          e.budget_id,
           et.type_name
         FROM Expenses e
         JOIN Expense_Types et ON e.type_id = et.type_id
@@ -211,7 +329,7 @@ export async function updateExpense(req, res) {
         description: row.notes || "",
         amount: Number(row.amount),
         notes: row.notes || "",
-        budgetId: null,
+        budget_id: row.budget_id || null
       };
   
       res.json({ message: "Expense updated successfully", expense });
@@ -231,7 +349,13 @@ export async function updateExpense(req, res) {
   
       // Retrieve the expense id from the route parameters
       const { id } = req.params;
-  
+      const checkSQL = `SELECT * FROM Expenses WHERE expense_id = ?`;
+      const [checkRows] = await connection.execute(checkSQL, [id]);
+      if (checkRows.length === 0) {
+        return res.status(404).json({ message: "Expense not found" });
+      }
+      const previousBudgetId = checkRows[0].budget_id;
+      
       // SQL query to delete the expense by expense_id
       const deleteSQL = `
         DELETE FROM Expenses
@@ -245,12 +369,25 @@ export async function updateExpense(req, res) {
       if (result.affectedRows === 0) {
         return res.status(404).json({ message: "Expense not found" });
       }
+      if(previousBudgetId) {
+        const previousBudgetUpdateSQL = `SELECT SUM(amount) as total_spent FROM Expenses WHERE budget_id = ?`;
+        const [previousBudgetRows] = await connection.execute(previousBudgetUpdateSQL, [previousBudgetId]);
+        const previousTotalSpent = previousBudgetRows[0]?.total_spent || 0;
+
+        // Update the previous budget's spent amount
+        const updatePreviousBudgetSQL = `
+          UPDATE Budgets
+          SET budget_spent = ?
+          WHERE budget_id = ?
+        `;
+        await connection.execute(updatePreviousBudgetSQL, [previousTotalSpent, previousBudgetId]);
+      }
   
       // Return success response
-      res.json({ message: "Expense deleted successfully" });
+      return res.json({ message: "Expense deleted successfully" });
     } catch (err) {
       console.error("Error deleting expense:", err);
-      res.status(500).json({ error: err.message });
+      return res.status(500).json({ error: err.message });
     } finally {
       
     }
@@ -272,6 +409,7 @@ export async function updateExpense(req, res) {
           e.amount,
           e.description,
           e.notes,
+          e.budget_id,
           et.type_name
         FROM Expenses e
         JOIN Expense_Types et ON e.type_id = et.type_id
@@ -291,13 +429,13 @@ export async function updateExpense(req, res) {
         description: row.description || "",
         amount: Number(row.amount),
         notes: row.notes || "",
-        budgetId: null
+        budgetId: row.budget_id || null
       }));
   
-      res.json(expenses);
+      return res.json(expenses);
     } catch (err) {
       console.error("Error fetching recent expenses:", err);
-      res.status(500).json({ error: err.message });
+      return res.status(500).json({ error: err.message });
     } finally {
       
     }

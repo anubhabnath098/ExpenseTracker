@@ -1,6 +1,6 @@
 import express from 'express';
 const expenseRoute = express.Router();
-import {getAllExpenses,getExpenseById,addExpense,updateExpense,deleteExpenseById, getRecentExpenses, getMonthlyExpenses, getExpenseCategories, getTotalExpenses} from '../controllers/expenseController.js';
+import {getAllExpenses,getExpenseById,addExpense,updateExpense,deleteExpenseById, getRecentExpenses, getMonthlyExpenses, getExpenseCategories, getTotalExpenses, getAllBudgetNames} from '../controllers/expenseController.js';
 import {authMiddleware} from '../middlewares/authMiddleware.js';
 
 
@@ -13,5 +13,6 @@ expenseRoute.get('/monthly/:userid',authMiddleware,getMonthlyExpenses)
 expenseRoute.get('/categories/:userid',authMiddleware,getExpenseCategories)
 expenseRoute.get('/total/:userid',authMiddleware,getTotalExpenses)
 expenseRoute.get('/:id',authMiddleware,getExpenseById);
+expenseRoute.get('/budget/all/:userid', authMiddleware, getAllBudgetNames);
 
 export default expenseRoute

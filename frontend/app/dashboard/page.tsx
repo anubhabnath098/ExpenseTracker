@@ -13,7 +13,7 @@ export default function DashboardPage() {
         <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-blue-900/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/2"></div>
       </div>
       <div>
-        <h1 className="text-3xl font-bold gradient-text">Dashboard</h1>
+        <h1 className="text-3xl font-bold text-purple-400">Dashboard</h1>
         <p className="text-muted-foreground mt-1">Welcome back! Here's an overview of your finances.</p>
       </div>
 

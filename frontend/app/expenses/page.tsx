@@ -56,7 +56,12 @@ interface Expense {
   description: string
   amount: number
   notes: string
-  budgetId: null
+  budget_id: string | null
+}
+
+interface Budget {
+  budget_id: string,
+  budget_name: string,
 }
 
 export default function ExpensesPage() {
@@ -67,6 +72,7 @@ export default function ExpensesPage() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [budgets, setBudgets] = useState<Budget[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([])
   const [isLoading, setIsLoading] = useState(false)
 
@@ -78,6 +84,7 @@ export default function ExpensesPage() {
     
     if (token && userId) {
       fetchExpenses()
+      fetchBudgetName()
     }
   }, [])
 
@@ -101,8 +108,37 @@ export default function ExpensesPage() {
       
       const data: Expense[] = await response.json()
       setExpenses(data)
+      console.log("Fetched expenses:", data)
     } catch (error) {
       toast.error("Error fetching expenses")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const fetchBudgetName = async() =>{
+    setIsLoading(true)
+    const token = localStorage.getItem('token')
+    const userId = localStorage.getItem('user_id')
+
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/expense/budget/all/${userId}`, {
+        method: 'GET',
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      })
+
+      if (!response.ok) {
+        toast.error(`${response.status}`)
+      }
+
+      const data: Budget[] = await response.json()
+      setBudgets(data)
+      
+    } catch (error) {
+      toast.error("Error fetching budget")
     } finally {
       setIsLoading(false)
     }
@@ -152,7 +188,7 @@ export default function ExpensesPage() {
     }))
     .filter((item) => item.value > 0)
 
-  const handleAddExpense = async (newExpense: Omit<Expense, "id" | "budgetId">) => {
+  const handleAddExpense = async (newExpense: Omit<Expense, "id">) => {
     setIsLoading(true)
     const token = localStorage.getItem('token')
     const userId = localStorage.getItem('user_id')
@@ -171,6 +207,7 @@ export default function ExpensesPage() {
           expense_date: newExpense.date,
           description: newExpense.description,
           notes: newExpense.notes,
+          budget_id: newExpense.budget_id
         }),
       })
       
@@ -205,6 +242,7 @@ export default function ExpensesPage() {
           expense_date: new Date(updatedExpense.date).toISOString().split('T')[0],
           description: updatedExpense.description,
           notes: updatedExpense.notes,
+          budget_id: updatedExpense.budget_id
         }),
       })
       
@@ -262,7 +300,7 @@ export default function ExpensesPage() {
       </div>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold gradient-text">Expenses</h1>
+          <h1 className="text-3xl font-bold text-purple-400">Expenses</h1>
           <p className="text-muted-foreground mt-1">Track and manage your expenses</p>
         </div>
 
@@ -308,7 +346,7 @@ export default function ExpensesPage() {
                         />
                       ))}
                     </Chart.Pie>
-                    <ChartTooltipContent formatter={(value) => `$${value.toFixed(2)}`} />
+                    <ChartTooltipContent formatter={(value:any) => `$${value.toFixed(2)}`} />
                   </Chart.PieChart>
                 </Chart.ResponsiveContainer>
               </Chart.Content>
@@ -373,8 +411,10 @@ export default function ExpensesPage() {
       </div>
 
       <div className="rounded-lg border border-purple-900/20 overflow-hidden">
+      
         <div className="bg-card p-4 flex justify-between items-center">
           <h3 className="font-medium">Expense List</h3>
+          <h3 className="font-medium ml-7 hidden md:block">Budget</h3>
           <p className="text-sm text-muted-foreground">
             Total: <span className="font-medium">${totalAmount.toFixed(2)}</span>
           </p>
@@ -412,6 +452,13 @@ export default function ExpensesPage() {
                       <span>{new Date(expense.date).toLocaleDateString()}</span>
                     </div>
                   </div>
+                  <div className="flex-1 min-w-0 hidden md:block">
+                    {expense.budget_id?(<p className="text-sm font-medium text-purple-400">{budgets.find(b=>b.budget_id===expense.budget_id)?.budget_name}</p>
+                      ):
+                      (<p className="text-sm font-medium opacity-45">None</p>)
+                    }
+                    
+                  </div>
                   <div className="text-right">
                     <p className="text-sm font-medium">-${expense.amount.toFixed(2)}</p>
                   </div>
@@ -446,6 +493,10 @@ export default function ExpensesPage() {
                   <p className="text-lg font-medium">{new Date(selectedExpense.date).toLocaleDateString()}</p>
                 </div>
               </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Budget</p>
+                  <p className="text-sm mt-1">{budgets.find(b => b.budget_id === selectedExpense.budget_id)?.budget_name || "Does not belong to any budget"}</p>
+                </div>
 
               {selectedExpense.notes && (
                 <div>
@@ -497,6 +548,7 @@ export default function ExpensesPage() {
           </DialogHeader>
 
           <ExpenseForm 
+            budgets={budgets}
             onSubmit={handleAddExpense} 
             onCancel={() => setIsAddDialogOpen(false)}
             isLoading={isLoading}
@@ -515,6 +567,8 @@ export default function ExpensesPage() {
           {selectedExpense && (
             <ExpenseForm
               initialData={selectedExpense}
+              budgets={budgets}
+              selectedBudget={budgets.find(b => b.budget_id === selectedExpense.budget_id)}
               onSubmit={(updatedData) => handleEditExpense({
                 ...selectedExpense, 
                 ...updatedData 
@@ -559,16 +613,21 @@ export default function ExpensesPage() {
 }
 
 interface ExpenseFormProps {
-  initialData?: Expense
-  onSubmit: (data: Omit<Expense, "id" | "budgetId">) => void
+  initialData?: Expense,
+  budgets?: Budget[],
+  selectedBudget?: Budget,
+  onSubmit: (data: Omit<Expense, "id">) => void
   onCancel: () => void
   isLoading: boolean
 }
 
-function ExpenseForm({ initialData, onSubmit, onCancel, isLoading }: ExpenseFormProps) {
+function ExpenseForm({ initialData, onSubmit, onCancel, isLoading, budgets, selectedBudget }: ExpenseFormProps) {
   const [description, setDescription] = useState(initialData?.description || "")
   const [category, setCategory] = useState<string>(
     initialData?.category || "Food & Dining"
+  )
+  const [budget, setBudget] = useState<string>(
+    selectedBudget?.budget_name || "None"
   )
   const [amount, setAmount] = useState(initialData?.amount.toString() || "")
   const [date, setDate] = useState<Date | undefined>(
@@ -578,13 +637,15 @@ function ExpenseForm({ initialData, onSubmit, onCancel, isLoading }: ExpenseForm
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    const formattedDate = date!.toISOString().split('T')[0] // Convert to YYYY-MM-DD
+    const formattedDate = date!.toISOString().split('T')[0]
+    console.log("budget_id = "+budgets?.find(b => b.budget_name === budget && budget !== "None")?.budget_id)
     onSubmit({
       date: formattedDate,
       category,
       description,
       amount: Number.parseFloat(amount),
       notes,
+      budget_id: budgets?.find(b => b.budget_name === budget && budget !== "None")?.budget_id || null
     })
   }
 
@@ -682,6 +743,32 @@ function ExpenseForm({ initialData, onSubmit, onCancel, isLoading }: ExpenseForm
           disabled={isLoading}
         />
       </div>
+      <div className="space-y-2">
+          <label htmlFor="category" className="text-sm font-medium">
+            Budget
+          </label>
+          <Select 
+            value={budget} 
+            onValueChange={setBudget}
+            disabled={isLoading}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select budget" />
+            </SelectTrigger>
+            <SelectContent>
+              {budgets && budgets.length > 0 ? (<>
+                <SelectItem value="None">None</SelectItem>
+                {budgets.map((budget) => (
+                  <SelectItem key={budget.budget_id} value={budget.budget_name}>
+                    {budget.budget_name}
+                  </SelectItem>
+                ))}
+              </>) : (
+                <SelectItem value="None">No Budgets Available</SelectItem>
+              )}
+            </SelectContent>
+          </Select>
+        </div>
 
       <DialogFooter>
         <Button 
@@ -694,7 +781,7 @@ function ExpenseForm({ initialData, onSubmit, onCancel, isLoading }: ExpenseForm
         </Button>
         <Button 
           type="submit" 
-          className="gradient-bg"
+          className="gradient-bg text-white"
           disabled={isLoading}
         >
           {initialData ? "Update Expense" : "Add Expense"}

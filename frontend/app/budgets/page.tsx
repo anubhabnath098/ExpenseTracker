@@ -197,7 +197,7 @@ export default function BudgetsPage() {
       </div>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold gradient-text">Budgets</h1>
+          <h1 className="text-3xl font-bold text-purple-400">Budgets</h1>
           <p className="text-muted-foreground mt-1">Manage and track your budget plans</p>
         </div>
 
@@ -373,7 +373,7 @@ export default function BudgetsPage() {
                           <Chart.Cell fill="#9333ea" />
                           <Chart.Cell fill="#e9d5ff" />
                         </Chart.Pie>
-                        <ChartTooltip formatter={(value) => `$${value}`} />
+                        <ChartTooltip formatter={(value:any) => `$${value}`} />
                       </Chart.PieChart>
                     </Chart.ResponsiveContainer>
                   </Chart.Content>
@@ -478,7 +478,6 @@ function BudgetForm({
   const [name, setName] = useState(initialData?.name || "")
   const [category, setCategory] = useState(initialData?.category || "")
   const [limit, setLimit] = useState(initialData?.limit.toString() || "")
-  const [spent, setSpent] = useState(initialData?.spent.toString() || "0")
   const [startDate, setStartDate] = useState<Date | undefined>(initialData?.startDate || new Date())
   const [endDate, setEndDate] = useState<Date | undefined>(initialData?.endDate || new Date())
   const [notes, setNotes] = useState(initialData?.notes || "")
@@ -490,7 +489,7 @@ function BudgetForm({
       name,
       category,
       limit: Number.parseFloat(limit),
-      spent: Number.parseFloat(spent),
+      spent: initialData ? initialData.spent : 0,
       startDate: startDate!,
       endDate: endDate!,
       notes,
@@ -542,21 +541,6 @@ function BudgetForm({
         </div>
 
         <div className="space-y-2">
-          <label htmlFor="spent" className="text-sm font-medium">
-            Amount Spent ($)
-          </label>
-          <Input
-            id="spent"
-            type="number"
-            min="0"
-            step="0.01"
-            value={spent}
-            onChange={(e) => setSpent(e.target.value)}
-            required
-          />
-        </div>
-
-        <div className="space-y-2">
           <label htmlFor="startDate" className="text-sm font-medium">
             Start Date
           </label>
@@ -602,7 +586,7 @@ function BudgetForm({
         <Button type="button" variant="outline" onClick={onCancel}>
           Cancel
         </Button>
-        <Button type="submit" className="gradient-bg">
+        <Button type="submit" className="gradient-bg text-white">
           {initialData ? "Update Budget" : "Create Budget"}
         </Button>
       </DialogFooter>
